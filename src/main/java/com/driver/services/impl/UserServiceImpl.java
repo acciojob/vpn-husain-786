@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Invalid Country Code!!!!!");
         }
 
-        Country country = countryRepository3.findByCountryName();
+        Country country = countryRepository3.findByCountryName(countryName);
 
         User user = new User();
         user = userRepository3.save(user);
