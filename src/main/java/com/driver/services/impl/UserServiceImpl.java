@@ -11,8 +11,6 @@ import com.driver.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -25,52 +23,46 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User register(String username, String password, String countryName) throws Exception{
-        CountryName countryName1 = null;
-        for (CountryName cn: CountryName.values()){
-            if (cn.name().equalsIgnoreCase(countryName)){
-                countryName1 = cn;
-                break;
+        if(countryName.equalsIgnoreCase("ind") || countryName.equalsIgnoreCase("aus") || countryName.equalsIgnoreCase("usa") || countryName.equalsIgnoreCase("chi") || countryName.equalsIgnoreCase("jpn")) {
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(password);
+            Country country = new Country();
+            if (countryName.equalsIgnoreCase("ind")) {
+                country.setCountryName(CountryName.IND);
+                country.setCode(CountryName.IND.toCode());
+            }if (countryName.equalsIgnoreCase("usa")) {
+                country.setCountryName(CountryName.USA);
+                country.setCode(CountryName.USA.toCode());
+            }if (countryName.equalsIgnoreCase("aus")) {
+                country.setCountryName(CountryName.AUS);
+                country.setCode(CountryName.AUS.toCode());
+            } if (countryName.equalsIgnoreCase("chi")) {
+                country.setCountryName(CountryName.CHI);
+                country.setCode(CountryName.CHI.toCode());
+            }if (countryName.equalsIgnoreCase("jpn")) {
+                country.setCountryName(CountryName.JPN);
+                country.setCode(CountryName.JPN.toCode());
             }
+            user.setConnected(false);
+            user.setMaskedIp(null);
+            user.setOriginalCountry(country);
+            user.setOriginalIp(country.getCode()+"."+user.getId());
+            country.setUser(user);
+            userRepository3.save(user);
+            return user;
+        }else{
+            throw new Exception("Country not found");
         }
-        if (countryName1 == null){
-            throw new Exception("Invalid Country Code!!!!!");
-        }
-
-        Country country = countryRepository3.findByCountryName(countryName);
-
-        User user = new User();
-        user = userRepository3.save(user);
-
-        user.setUsername(username);
-        user.setPassword(password);
-        user.setOriginalIp(country.getCode()+"."+user.getId());
-
-        country.setUser(user);
-        user.setCountry(country);
-
-        return userRepository3.save(user);
     }
 
     @Override
-    public User subscribe(Integer userId, Integer serviceProviderId) throws Exception {
-        Optional<User> userOptional = userRepository3.findById(userId);
-        if (!userOptional.isPresent()){
-            throw new Exception("User is Missing!!!!!");
-        }
-
-        Optional<ServiceProvider> serviceProviderOptional = serviceProviderRepository3.findById(serviceProviderId);
-        if (!serviceProviderOptional.isPresent()){
-            throw new Exception("Service Provider is not present!!!");
-        }
-
-        User user = userOptional.get();
-        ServiceProvider serviceProvider = serviceProviderOptional.get();
-
+    public User subscribe(Integer userId, Integer serviceProviderId) {
+        User user = userRepository3.findById(userId).get();
+        ServiceProvider serviceProvider = serviceProviderRepository3.findById(serviceProviderId).get();
         user.getServiceProviderList().add(serviceProvider);
-        serviceProvider.getUserList().add(user);
-
-        serviceProviderRepository3.save(serviceProvider);
-
-        return userRepository3.save(user);
+        serviceProvider.getUsers().add(user);
+        userRepository3.save(user);
+        return user;
     }
 }

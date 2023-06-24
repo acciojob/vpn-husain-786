@@ -11,10 +11,10 @@ import com.driver.services.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.ArrayList;
 
 @Service
-public class AdminServiceImpl implements AdminService{
+public class AdminServiceImpl implements AdminService {
     @Autowired
     AdminRepository adminRepository1;
 
@@ -29,62 +29,53 @@ public class AdminServiceImpl implements AdminService{
         Admin admin = new Admin();
         admin.setUsername(username);
         admin.setPassword(password);
-        return adminRepository1.save(admin);
+        adminRepository1.save(admin);
+        return admin;
     }
 
     @Override
-    public Admin addServiceProvider(int adminId, String providerName) throws Exception{
-        Optional<Admin> adminOptional = adminRepository1.findById(adminId);
-        if (!adminOptional.isPresent()){
-            throw new Exception("Admin Not Found!!!");
-        }
-
-        Admin admin = adminOptional.get();
-
+    public Admin addServiceProvider(int adminId, String providerName) {
         ServiceProvider serviceProvider = new ServiceProvider();
+        Admin admin = adminRepository1.findById(adminId).get();
         serviceProvider.setName(providerName);
         serviceProvider.setAdmin(admin);
-
-        admin.getServiceProviderList().add(serviceProvider);
-
-        admin = adminRepository1.save(admin);
-
+        admin.getServiceProviders().add(serviceProvider);
+        adminRepository1.save(admin);
         return admin;
     }
 
     @Override
     public ServiceProvider addCountry(int serviceProviderId, String countryName) throws Exception{
-        Optional<ServiceProvider> serviceProviderOptional = serviceProviderRepository1.findById(serviceProviderId);
-        if (!serviceProviderOptional.isPresent()){
-            throw new Exception("Service Provider Not Found!!!");
-        }
-
-        ServiceProvider serviceProvider = serviceProviderOptional.get();
-
-        CountryName countryName1 = null;
-        boolean isPresent = false;
-        // check whether the given country name is present in the CountryName enum or not....
-        for (CountryName cn: CountryName.values()){
-            if (cn.name().equalsIgnoreCase(countryName)){
-                isPresent = true;
-                countryName1 = cn;
-                break;
-            }
-        }
-        if (!isPresent){
+        if(countryName.length() != 3){
             throw new Exception("Country not found");
         }
-
-        // adding attributes of country..........
-        Country country = new Country();
-        country.setCountryName(countryName1);
-        country.setCode(countryName1.toCode());
-        country.setServiceProvider(serviceProvider);
-
-        serviceProvider.getCountryList().add(country);
-
-        serviceProvider = serviceProviderRepository1.save(serviceProvider);
-
-        return serviceProvider;
+        if(countryName.equalsIgnoreCase("ind") || countryName.equalsIgnoreCase("aus") || countryName.equalsIgnoreCase("usa") || countryName.equalsIgnoreCase("chi") || countryName.equalsIgnoreCase("jpn")){
+            ServiceProvider serviceProvider = serviceProviderRepository1.findById(serviceProviderId).get();
+            Country country = new Country();
+            countryName = countryName.toUpperCase();
+            if (countryName.equalsIgnoreCase("ind")) {
+                System.out.println("country name is"+countryName);
+                country.setCountryName(CountryName.IND);
+                country.setCode(CountryName.IND.toCode());
+            } if (countryName.equalsIgnoreCase("usa")) {
+                country.setCountryName(CountryName.USA);
+                country.setCode(CountryName.USA.toCode());
+            } if (countryName.equalsIgnoreCase("aus")) {
+                country.setCountryName(CountryName.AUS);
+                country.setCode(CountryName.AUS.toCode());
+            } if (countryName.equalsIgnoreCase("chi")) {
+                country.setCountryName(CountryName.CHI);
+                country.setCode(CountryName.CHI.toCode());
+            }if (countryName.equalsIgnoreCase("jpn")) {
+                country.setCountryName(CountryName.JPN);
+                country.setCode(CountryName.JPN.toCode());
+            }
+            country.setServiceProvider(serviceProvider);
+            serviceProvider.getCountryList().add(country);
+            serviceProviderRepository1.save(serviceProvider);
+            return serviceProvider;
+        }else{
+            throw new Exception("Country not found");
+        }
     }
 }
